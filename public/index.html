@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+    <head>
+        <title>GraphQuest</title>
+        
+        <style>
+            html, body {
+                border: 0;
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+            
+            #players {
+            }
+            
+            #stuff {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+            }
+            
+            #ships [disabled] {
+                color: gray;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <h1>Hello, Worlds!</h1>
+        
+        <ul id="players">
+            
+        </ul>
+        
+        <ul id="games">
+            <li><a href="javascript:create_game()">Create game</a></li>
+        </ul>
+        
+        <div id="game-ui">
+            <label>Source Star:</label>
+            <span id="source-id"></span>
+            <br />
+            <label>Target Star:</label>
+            <span id="target-id"></span>
+            <br />
+            <input id="ships" type="number" min=1 max=0 />
+            <button id="submit-move">Order!</button>
+            <br />
+            <button id="ready">Ready!</button>
+            <div id="notifications">
+            </div>
+        </div>
+        
+        <div id="stuff">
+        </div>
+
+        <script src="/jquery.js"></script>
+        <script src="/three.min.js"></script>
+        <script src="/OrbitControls.js"></script>
+        <script src="/THREEx.WindowResize.js"></script>
+        <script src="/fourd.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/index.js"></script>
+        
+    </body>
+</html>
