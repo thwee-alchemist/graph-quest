@@ -272,21 +272,25 @@ class Fleet{
     }
 
     travel(){
+        console.log(`${this.id} travelling to ${this.destination.id}.`)
         var star_system = this.destination;
         if(!star_system){
             return;
         }
+
+        star_system.universe.travelling.delete(this);
         
         if(star_system.ruler == this.ruler){
             this.check_in(star_system);
+            return null;
         }else{
             var survivor = this.battle(star_system.fleet);
+            return survivor.rule_change ? survivor : null;
         }
-        
-        star_system.universe.travelling.delete(this);
     }
 
     battle(fleet){
+        console.log(`battle between ${this.id} and ${fleet.id} at ${this.destination.id}...`)
         var battle_result = Math.round(this.might - fleet.might);
         if(battle_result > 0){
             this.strength = battle_result;
@@ -295,7 +299,7 @@ class Fleet{
             fleet.strength = Math.abs(battle_result);
         }
         
-        battle_info = {
+        var battle_info = {
             attacking: this, 
             defending: fleet, 
             star: this.destination,
@@ -388,6 +392,10 @@ class StarSystem extends Vertex{
     set ruler(val){
         this.fleet.ruler = val;
     }
+
+    get strength(){
+        return this.fleet.strength;
+    }
 }
 
 var star = new StarSystem(0.5, 5, {name: 'Joshua'}, {});
@@ -422,7 +430,7 @@ class GameMap extends Graph {
         for(var i=0; i<this.stars; i++){
             star_systems.push(this.add_vertex(new StarSystem(
                 Math.random(), 
-                Math.round(Math.random()*10), 
+                Math.round(Math.random()*20), 
                 undefined, 
                 this
             )));
@@ -452,6 +460,7 @@ class GameMap extends Graph {
                 return star;
             }
         }
+        star.production_rate = 10;
         return false;
     }
     
@@ -486,13 +495,19 @@ class GameMap extends Graph {
             system.turn();
         }
         
+        var changed_systems = [];
         this.travelling.forEach(fleet => {
-            fleet.turn();
+            var system = fleet.turn();
+            if(system){
+                changed_systems.push(system);
+            }
         });
         
         for(var i=0; i<this.players.length; i++){
             this.players[i].ready = false;
         }
+
+        return changed_systems;
     }
     
     /*
@@ -502,7 +517,7 @@ class GameMap extends Graph {
     */
     winner(){
         var ruler = null;
-        for(var system of map.V){
+        for(var system of this.V){
             if(ruler === null){
                 ruler = system.ruler;
             }else{
@@ -534,8 +549,8 @@ class Game{
     }
 
     ready(){
-        for(var i=0; i<this.map.players.length; i++){
-            if(!this.map.players[i].ready){
+        for(var i=0; i<this.players.length; i++){
+            if(!this.players[i].ready){
                 return false;
             }
         }
@@ -609,6 +624,12 @@ class Game{
     }
     
     reset_players_ready(){
+        this.sockets.forEach(s => {
+            s.player.ready = false;
+        })
+    }
+
+    reset_clients_ready(){
         this.sockets.forEach(s => {
             try{
                 s.player.ready = false;
@@ -688,9 +709,15 @@ var setup_fleet_events = function(game, fleet, socket){
         battle_info.defender.socket.emit('battle', battle_info);
         game.send_player_maps();
     });
-
 }
 
+var ready = function(game){
+    var each = true;
+    game.sockets.forEach(s => {
+        each = each && s.player.ready;
+    });
+    return each;
+}
 
 var games = new Set();
 var players = new Set();
@@ -761,7 +788,8 @@ io.on('connection', function(socket){
             console.log(`${socket.player._name} tried joining full game ${game.name}.`);
             socket.emit('game full');
             return;
-        }        
+        }
+        star.production_rate = 10; 
         
         // setup fleet events such as battle or star system conquered
         setup_fleet_events(game, star.fleet, socket);
@@ -769,10 +797,9 @@ io.on('connection', function(socket){
         // send the complete map to the player
         var map = JSON.stringify(game.player_map(undefined));
         
-        console.log('map', map);
         socket.emit('game map', map);
-        
         console.log('map sent.');
+        
         socket.player.ready = false;
         
         // communicates the newly assigned star to all connected sockets
@@ -791,7 +818,7 @@ io.on('connection', function(socket){
                 game.started = true;
                 game.open = false;
                 
-                game.reset_players_ready();
+                game.reset_clients_ready();
                 game.announce_new_round();
                 
                 console.log('sending player maps')
@@ -799,35 +826,51 @@ io.on('connection', function(socket){
                 console.log('player maps sent.')
             }
         }else{
+            var game = socket.game;
+            
+            // register each of the moves, creating a corresponding fleet.
             for(var i=0; i<moves.length; i++){
                 var move = moves[i];
-                var source = socket.game.map.V.get(move.source);
+                var source = game.map.V.get(move.source);
                 if(source.ruler != socket.player){
                     continue;
                 }
 
-                var target = socket.game.map.V.get(move.target);
+                var target = game.map.V.get(move.target);
 
-                if(source && target && move.numbers < source.strength){
+                if((source !== undefined) && (target !== undefined) && (move.number < source.strength)){
                     var fleet = source.fleet.dispatch(move.number, target);
                     setup_fleet_events(game, fleet, socket);
-                    socket.game.map.travelling.add(fleet);
-                    socket.emit('move confirmed');
+                    game.map.travelling.add(fleet);
+                    socket.to(game.id.toString()).emit('move confirmed', move);
                 }
             }
             
-            if(socket.game.ready()){
-                socket.game.map.turns();
+            if(ready(game)){
+                var changed_systems = game.map.turns();
+                
+                changed_systems.forEach(changed_system => {
+                    socket.to(game.id.toString()).emit('starsystem conquered', {
+                        star_id: changed_system.star.id,
+                        player: changed_system.survivor
+                    });
+                });
+                console.log('the galaxy turned');
 
-                if(socket.game.map.winner()){
-                    socket.to(socket.game.id).emit('winner', socket.game.map.winner().name);
+                game.reset_clients_ready();
+                game.announce_new_round();    
+                game.send_player_maps();
+                
+                if(game.map.winner()){
+                    socket.to(game.id.toString()).emit('winner', game.map.winner().name);
+                }else{
+                    socket.to(game.id.toString()).emit('new round', game.map.round);                    
                 }
-                socket.to(socket.game.id).emit('new round', socket.game.map.round);
+
+                game.reset_players_ready();
             }
             
-            for(var i=0; i<socket.game.map.players.length; i++){
-                socket.game.players[i].ready = false;
-            }
+            
         }    
     });
     
@@ -866,4 +909,3 @@ Set.prototype.filter = function(predicate){
     }
     return arr;
 };
-
