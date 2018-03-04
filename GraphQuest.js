@@ -518,15 +518,6 @@ class GameMap extends Graph {
     }
 };
 
-var map = new GameMap(10, 10);
-map.generate();
-map.V.forEach(star => console.log(star.ruler))
-
-map.add_player(new Player('Joshua'));
-map.V.forEach(star => console.log(star.ruler))
-
-"use strict";
-
 var game_id = 0;
 class Game{
     constructor(name, stars, wormholes, password){
@@ -558,6 +549,7 @@ class Game{
             V: new Set(),
             E: new Set()
         }
+
         if(player === undefined){
             this.map.V.forEach(star => {
                 map.V.add(star);
@@ -568,8 +560,7 @@ class Game{
             })
         }else{
             this.map.V.forEach(star => {
-                console.log(`star.ruler == player: ${star.ruler == player}`)
-                if(star.ruler == player){
+                if(star && (star.ruler == player)){
                     map.V.add(star);
                     star.neighbors.forEach(other_star => {
                         map.V.add(other_star);
@@ -577,7 +568,7 @@ class Game{
                     
                     star.edges.forEach(e => {
                         map.E.add(e);
-                    })
+                    });
                 }
             });
         }
@@ -610,16 +601,20 @@ class Game{
     }
     
     send_player_maps(){
-        this.sockets.forEach(socket => {
-            var map = this.player_map(socket.player);
+        this.sockets.forEach(s => {
+            var map = this.player_map(s.player);
             console.log('player map', JSON.stringify(map));
-            socket.to(this.id.toString()).emit('game map', JSON.stringify(map));
+            s.emit('game map', JSON.stringify(map));
         });
     }
     
     reset_players_ready(){
         this.sockets.forEach(s => {
-            s.player.ready = false;
+            try{
+                s.player.ready = false;
+            }catch(e){
+                console.warn(e);
+            }
         });
     }
     
@@ -755,10 +750,10 @@ io.on('connection', function(socket){
         // retrieve the game
         var game = games.filter(game => game.id == id)[0];
         socket.game = game;
-        socket.join(game.id.toString()); 
+        socket.join(game.id.toString());
         
         // add this socket to the game
-        // game.sockets.add(socket);
+        game.sockets.add(socket);
         
         // assigns a star to the player
         var star = game.map.add_player(socket.player);
@@ -766,14 +761,12 @@ io.on('connection', function(socket){
             console.log(`${socket.player._name} tried joining full game ${game.name}.`);
             socket.emit('game full');
             return;
-        }
+        }        
         
         // setup fleet events such as battle or star system conquered
         setup_fleet_events(game, star.fleet, socket);
         
         // send the complete map to the player
-        console.log(`${socket.name} joined ${game.name} @ star ${star.id}`);
-        
         var map = JSON.stringify(game.player_map(undefined));
         
         console.log('map', map);
@@ -791,17 +784,19 @@ io.on('connection', function(socket){
         socket.player.ready = true;
         console.log(`${socket.player.name} ready...`);
         
-        if(!socket.game.started){
-            if(socket.game.ready()){
+        var game = socket.game;
+        if(!game.started){
+            if(game.ready()){
                 console.log(`all players ready, distributing ${socket.game.name}'s maps to players...`);
-                socket.game.started = true;
-                socket.game.open = false;
+                game.started = true;
+                game.open = false;
                 
-                socket.game.reset_players_ready();
-                socket.game.announce_new_round();
+                game.reset_players_ready();
+                game.announce_new_round();
                 
-                console.log('sending player map')
-                socket.game.send_player_maps();
+                console.log('sending player maps')
+                game.send_player_maps();
+                console.log('player maps sent.')
             }
         }else{
             for(var i=0; i<moves.length; i++){
@@ -840,7 +835,9 @@ io.on('connection', function(socket){
         if(socket.player){
             players.delete(socket.player);
             socket.emit('players', Array.from(players));
-            socket.to(socket.game.id).broadcast.emit('players', Array.from(players));
+            if(socket.game){
+                socket.to(socket.game.id.toString()).broadcast.emit('players', Array.from(players));
+            }
         }
         if(socket.game){
             var game = socket.game;

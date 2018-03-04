@@ -140,6 +140,7 @@ $('#ready').click(function(){
 
 socket.on('new round', round => {
     $('#ready').prop('disabled', false);
+    $('#notifications').append(`<span>Round ${round} begins...`);
 });
 
 $('#submit-move').prop('disabled', true);
