@@ -439,7 +439,7 @@ class GameMap extends Graph {
         for(var i=0; i<this.stars; i++){
             star_systems.push(this.add_vertex(new StarSystem(
                 Math.random(), 
-                Math.round(Math.random()*20), 
+                Math.round(Math.random()*10), 
                 undefined, 
                 this
             )));
@@ -675,6 +675,7 @@ class Game{
     kick_lost_players(){
         this.sockets.forEach(s => {
             if(this.map.player_lost(s.player)){
+                this.map.remove_player(s.player);
                 s.emit('You lost.');
                 s.to(this.id.toString()).broadcast.emit('player defeated', s.player);
             }

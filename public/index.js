@@ -22,6 +22,7 @@ var choice = function(l){
 socket.on('name?', function(){
     console.log('asked for name...');
     name = prompt('What would you like to be called?');
+    $('.header').text(`hello, ${name}`);
     socket.emit('name:', name);
     name = 'Joshua';
 });
@@ -37,18 +38,18 @@ socket.on('games:', games => {
 });
 
 socket.on('battle', battle_info => {
-    $('#notifications').append(`<div>Battle between ${battle_info.attacking._name} and ${battle.info.defending._name} at ${battle_info.star.id}...`);
-    $('#notifications').append(`<div>${battle_info.rule_change ? 
-        battle_info.defender._name + ' holds ' + battle_info.star.id : 
-        battle_info.attacker._name + ' wins ' + battle_info.star.id}.</div>`);
+    $('#notifications').append(`<li>Battle between ${battle_info.attacking._name} and ${battle.info.defending._name} at ${battle_info.star.id}...M/li>`);
+    $('#notifications').append(`<li>${battle_info.rule_change ? 
+        battle_info.defending._name + ' holds ' + battle_info.star.id : 
+        battle_info.attacking._name + ' wins ' + battle_info.star.id}.</li>`);
     });
 
 socket.on('You lost.', function(){
-    $('#notifications').append('<div>You lost.</div>');
+    $('#notifications').append('<li>You lost.</li>');
 });
 
 socket.on('You won.', function(){
-    $('#notifications').append(`<div>You won.</div>`);
+    $('#notifications').append(`<li>You won.</li>`);
 })
 
 socket.on('player defeated', player => {
@@ -167,11 +168,11 @@ $('#ready').click(function(){
 
 socket.on('new round', round => {
     $('#ready').prop('disabled', false);
-    $('#notifications').append(`<div>Round ${round} begins...</div>`);
+    $('#notifications').append(`<li>Round ${round} begins...</li>`);
 });
 
 socket.on('move confirmed', move => {
-    $('#notifications').append(`<div>Sending ${move.number} ships from ${move.source} to ${move.target}.`);
+    $('#notifications').append(`<li>Sending ${move.number} ships from ${move.source} to ${move.target}.</li>`);
 });
 
 $('#submit-move').prop('disabled', true);

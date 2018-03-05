@@ -1,6 +1,8 @@
 <!doctype html>
 <html>
     <head>
+        <meta charset="utf8">
+        <meta author="thwee.abacadabra.alchemist@gmail.com">
         <title>GraphQuest</title>
         
         <style>
@@ -9,9 +11,6 @@
                 padding: 0;
                 margin: 0;
                 overflow: hidden;
-            }
-            
-            #players {
             }
             
             #stuff {
@@ -25,6 +24,7 @@
             
             #ships [disabled] {
                 color: gray;
+                background-color: gray;
             }
             
         </style>
@@ -49,7 +49,7 @@
             <br />
             <input id="ships" type="number" min=1 max=0 />
             <button id="submit-move">Order!</button>
-            <button id="cancel-moves">Cancel all moves.a</button>
+            <button id="cancel-moves">Cancel all moves.</button>
             <br />
             <button id="ready">Ready!</button>
             <div id="notifications">
