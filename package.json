@@ -17,6 +17,6 @@
         "type": "git",
         "url": "https://github.com/thwee-alchemist/graph-quest.git"
     },
-    "keywords": ["node", "heroku", "express"],
+    "keywords": ["node", "heroku", "express", "graph-quest"],
     "author": "Joshua Marshall Moore"
 }
