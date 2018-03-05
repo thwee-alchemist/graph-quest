@@ -21,7 +21,8 @@ var choice = function(l){
 
 socket.on('name?', function(){
     console.log('asked for name...');
-    socket.emit('name:', 'Joshua');
+    name = prompt('What would you like to be called?');
+    socket.emit('name:', name);
     name = 'Joshua';
 });
 
@@ -33,6 +34,25 @@ socket.on('games:', games => {
     for(var i=0; i<games.length; i++){
         $('#games').append(`<li class="game" id="game-${games[i].id}"><a href="javascript:join_game(${games[i].id})">${games[i].name}</a></li>`);
     }
+});
+
+socket.on('battle', battle_info => {
+    $('#notifications').append(`<div>Battle between ${battle_info.attacking._name} and ${battle.info.defending._name} at ${battle_info.star.id}...`);
+    $('#notifications').append(`<div>${battle_info.rule_change ? 
+        battle_info.defender._name + ' holds ' + battle_info.star.id : 
+        battle_info.attacker._name + ' wins ' + battle_info.star.id}.</div>`);
+    });
+
+socket.on('You lost.', function(){
+    $('#notifications').append('<div>You lost.</div>');
+});
+
+socket.on('You won.', function(){
+    $('#notifications').append(`<div>You won.</div>`);
+})
+
+socket.on('player defeated', player => {
+    $('#notifications').append(`${player._name} defeated.`);
 });
 
 /*
@@ -120,10 +140,17 @@ socket.on('star system conquered', event => {
     old_vertex.replace_cube(options);
 });
 
-socket.emit('create gmae', {stars: 10, additional_wormholes: 10, });
+socket.on('color', color => {
+    console.log('color', '0x' + parseInt(color).toString(16));
+    $('.header').css({'color': '#' + parseInt(color).toString(16)});
+}); 
 
 fourd = new FourD();
-fourd.init('#stuff', {width: window.innerWidth, height: window.innerHeight});
+fourd.init('#stuff', {
+    width: window.innerWidth, 
+    height: window.innerHeight, 
+    //background: 'public/Su_Song_Star_Map_1.JPG'
+});
 fourd._internals.camera.position.z = -25;
 
 socket.on('game full', () => {
@@ -148,6 +175,8 @@ socket.on('move confirmed', move => {
 });
 
 $('#submit-move').prop('disabled', true);
+$('#cancel-moves').prop('disabled', true);
+
 var source_id, target_id;
 var source, target;
 fourd.on_mouse_down = (vertex) => {
@@ -187,7 +216,11 @@ fourd.on_mouse_down = (vertex) => {
 
 $('#submit-move').click(function(){
     var number = $('#ships').val();
-    moves.push({source: source_id, target: target_id, number: number});
+    moves.push({
+        source: source_id, 
+        target: target_id, 
+        number: number
+    });
     source.strength -= number;
     
     $('#ships').val(source.strength-1);
@@ -200,46 +233,38 @@ $('#submit-move').click(function(){
     $('#target-id').text('');
     $('#ships').prop('disabled', true);
     $('#submit-move').prop('disabled', true);
+    $('#cancel-moves').prop('disabled', false);
+});
+
+$('#cancel-moves').click(function(){
+    
+    for(var i=0; i<moves.length; i++){
+        var client_vertex = server_id_to_client_vertex.get(moves.source_id);
+        client_vertex.strength += moves[i].number;
+    }
+    moves = [];
+
 });
 
 function create_game(){
     
-    /*
-    var name;
-    do{
-        name = prompt("A name for this game: ");
-    }while(!name);
+    var name = prompt("A name for this game: ");
+    if(!name){
+        return;
+    }
+
+    var players = parseInt(prompt("Number of players: "));
+    if(!players){
+        return;
+    }
     
-    var players;
-    do{
-        players = prompt("Number of players: ");
-        players = parseInt(players);
-        
-        if(players === 0){
-            return;
-        }
-    }while(!players);
+    var stars = parseInt(prompt('Number of stars'));
+    if(!stars){
+        return;
+    }
     
-    var stars;
-    do{
-        stars = prompt("Number of stars: ");
-        stars = parseInt(stars);
-        
-        if(stars === 0){
-            return;
-        }
-    }while(!stars);
-    
-    var additional_wormholes;
-    do{
-        additional_wormholes = prompt("Number of additional wormholes: ");
-        additional_wormholes = parseInt(additional_wormholes);
-        
-        if(additional_wormholes === 0){
-            return;
-        }
-    }while(!additional_wormholes);
-    
+    var additional_wormholes = parseInt(prompt("Number of additional wormholes: "));
+
     console.log('new game', players, stars, additional_wormholes);
     socket.emit('new game', {
         name: name,
@@ -247,15 +272,17 @@ function create_game(){
         stars: stars,
         wormholes: additional_wormholes
     });
-    */
-    
+
     console.log('new game');
+    
+    /*
     socket.emit('new game', {
         name: 'Battle Royale',
         players: 2,
         stars: 10,
         wormholes: 20
     });
+    */
 }
 
 $('#game-ui').hide();

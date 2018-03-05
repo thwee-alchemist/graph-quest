@@ -290,7 +290,6 @@ class Fleet{
     }
 
     battle(fleet){
-        console.log(`battle between ${this.id} and ${fleet.id} at ${this.destination.id}...`)
         var battle_result = Math.round(this.might - fleet.might);
         if(battle_result > 0){
             this.strength = battle_result;
@@ -300,12 +299,29 @@ class Fleet{
         }
         
         var battle_info = {
-            attacking: this, 
-            defending: fleet, 
+            attacking: this.ruler, 
+            defending: fleet.ruler, 
             star: this.destination,
-            survivor: this.destination.fleet,
+            survivor: battle_result > 0 ? this : fleet,
             rule_change: this != this.destination.fleet
         };
+
+        
+        var cache = new Set();
+        battle_info = JSON.stringify(battle_info, function(key, value) {
+            if (typeof value === 'object' && value !== null) {
+                if (cache.has(value)) {
+                    // Circular reference found, discard key
+                    return;
+                }
+                
+                // Store value in our collection
+                cache.add(value);
+            }
+            return value;
+        });
+        cache = null; // Enable garbage collection
+
         this.events.emit('battle', battle_info);
         fleet.events.emit('battle', battle_info);
         
@@ -317,8 +333,6 @@ class Fleet{
         planet.fleet.add(this.remove(this.strength));
     }
 }
-
-"use strict";
 
 function choice(s){
     if(s.size == 0){
@@ -364,7 +378,6 @@ class Player{
     }
 }
 
-"use strict";
 
 class StarSystem extends Vertex{
     constructor(efficiency, production_rate, ruler, universe){
@@ -398,13 +411,6 @@ class StarSystem extends Vertex{
     }
 }
 
-var star = new StarSystem(0.5, 5, {name: 'Joshua'}, {});
-console.log(star.fleet.strength);
-star.turn();
-console.log(star.fleet.strength);
-
-"use strict";
-
 class GameMap extends Graph {
     constructor(stars, wormholes){
         super();
@@ -412,10 +418,13 @@ class GameMap extends Graph {
         this.round = 0;
         
         this.players = [];
-        this.stars = stars;
-        this.wormholes = wormholes;
+        this.stars = stars; // number
+        this.wormholes = wormholes; // number
         
         this.generate();
+
+        this.sockets_by_players = new WeakMap();
+        this.players_by_sockets = new WeakMap();
     }
     
     /*
@@ -451,7 +460,7 @@ class GameMap extends Graph {
         Adds a player to the map and assigns a random untaken star.
         Returns a star if successful, false otherwise. 
     */
-    add_player(player){
+    add_player(player, socket){
         this.players.push(player);
         for(var star of this.V){
             star = star[1];
@@ -461,11 +470,17 @@ class GameMap extends Graph {
             }
         }
         star.production_rate = 10;
+
+        this.sockets_by_players.set(player, socket);
+        this.players_by_sockets.set(socket, player);
         return false;
     }
     
     remove_player(player){
         this.players.splice(this.players.indexOf(player));
+        var socket = this.sockets_by_players.get(player);
+        this.sockets_by_players.delete(player);
+        this.players_by_sockets.delete(socket);
     }
     
     /*
@@ -488,12 +503,8 @@ class GameMap extends Graph {
         All travelling ships arrive at their destinations.
         All players' ready states are reset to false.
     */
-    turns(prompt_player){
+    turns(){
         this.round++;
-        for(var system of this.V){
-            system = system[1]
-            system.turn();
-        }
         
         var changed_systems = [];
         this.travelling.forEach(fleet => {
@@ -503,9 +514,9 @@ class GameMap extends Graph {
             }
         });
         
-        for(var i=0; i<this.players.length; i++){
-            this.players[i].ready = false;
-        }
+        this.V.forEach(system => {
+            system.turn();
+        })
 
         return changed_systems;
     }
@@ -516,20 +527,25 @@ class GameMap extends Graph {
         and the winner if there is one. 
     */
     winner(){
-        var ruler = null;
-        for(var system of this.V){
-            if(ruler === null){
-                ruler = system.ruler;
+        var winner = undefined;
+        this.V.forEach(system => {
+            if(winner === undefined){
+                winner = system.ruler;
             }else{
-                if(system.ruler == ruler){
-                    continue;
-                }else{
-                    return false;
-                }
+                winner = winner == system.ruler ? winner : false
             }
-        }
+        });
 
-        return ruler;
+        return winner;
+    }
+
+    player_lost(player){
+        var has_one = false;
+        this.V.forEach(system => {
+           has_one = has_one || (system.ruler == player);
+        });
+
+        return !has_one;
     }
 };
 
@@ -542,6 +558,17 @@ class Game{
         this.open = true;
         this.password = password;
         this.sockets = new Set();
+        this.moves = [];
+    }
+
+    add_moves(moves){
+        this.moves.concat(moves);
+    }
+
+    turn(){
+        this.moves.forEach(m => {
+            var source = this.map.V.get(m.source_idss)
+        })
     }
     
     get players(){
@@ -644,46 +671,16 @@ class Game{
             s.emit('new round', this.map.round);
         });
     }
-}
 
-var game = new Game('Battle Royale', 10, 10, 'pw');
-game.map.add_player(new Player('Joshua'));
-game.map.add_player(new Player('Moore'));
-game.map.V.forEach(s => console.log(s.ruler))
-
-/*
-var map = new GameMap(3, 2, ['Joshua', 'Marshall', 'Moore']);
-while(!map.connected()){
-    map.generate();
-}
-console.log(map);
-
-function prompt_player(player, map){
-    var systems = [];
-    // for each system in the set..
-    for(var [i, system] of map.V){
-        // only the player's systems are considered
-        if(system.ruler == player){
-            // obtain goal. a bit buggy, this is a hack
-            system.neighbors.forEach(goal => {
-                var fleet = system.fleet.dispatch(Math.floor(Math.random()*system.fleet.available), goal);
-                if(fleet.strength > 0){
-                    map.travelling.add(fleet);
-                }
-            });
-        }
+    kick_lost_players(){
+        this.sockets.forEach(s => {
+            if(this.map.player_lost(s.player)){
+                s.emit('You lost.');
+                s.to(this.id.toString()).broadcast.emit('player defeated', s.player);
+            }
+        });
     }
 }
-
-do{
-    console.log(map.round);
-    map.V.forEach(system => {
-        console.log(system.ruler.name, 'planet', system.id, 'with', system.fleet.strength, 'ships');
-    });
-    map.turns(prompt_player);
-}while(!map.winner() && map.round < 10);
-console.log('winner', map.winner());
-*/
 
 var express = require('express');
 var app = express();
@@ -704,9 +701,9 @@ http.listen(3000, function(){
 });
 
 var setup_fleet_events = function(game, fleet, socket){
-    star.fleet.events.on('battle', (battle_info) => {
-        battle_info.attacker.socket.emit('battle', battle_info);
-        battle_info.defender.socket.emit('battle', battle_info);
+    fleet.events.on('battle', (battle_info) => {
+        socket.emit('battle', battle_info);
+        socket.emit('battle', battle_info);
         game.send_player_maps();
     });
 }
@@ -796,10 +793,8 @@ io.on('connection', function(socket){
         
         // send the complete map to the player
         var map = JSON.stringify(game.player_map(undefined));
-        
         socket.emit('game map', map);
-        console.log('map sent.');
-        
+        socket.emit('color', socket.player.color);
         socket.player.ready = false;
         
         // communicates the newly assigned star to all connected sockets
@@ -821,9 +816,7 @@ io.on('connection', function(socket){
                 game.reset_clients_ready();
                 game.announce_new_round();
                 
-                console.log('sending player maps')
                 game.send_player_maps();
-                console.log('player maps sent.')
             }
         }else{
             var game = socket.game;
@@ -842,13 +835,16 @@ io.on('connection', function(socket){
                     var fleet = source.fleet.dispatch(move.number, target);
                     setup_fleet_events(game, fleet, socket);
                     game.map.travelling.add(fleet);
-                    socket.to(game.id.toString()).emit('move confirmed', move);
+                    socket.emit('move confirmed', move);
                 }
             }
             
             if(ready(game)){
+                game.announce_new_round();
+
                 var changed_systems = game.map.turns();
-                
+                game.kick_lost_players();
+
                 changed_systems.forEach(changed_system => {
                     socket.to(game.id.toString()).emit('starsystem conquered', {
                         star_id: changed_system.star.id,
@@ -857,21 +853,20 @@ io.on('connection', function(socket){
                 });
                 console.log('the galaxy turned');
 
-                game.reset_clients_ready();
-                game.announce_new_round();    
                 game.send_player_maps();
-                
-                if(game.map.winner()){
-                    socket.to(game.id.toString()).emit('winner', game.map.winner().name);
-                }else{
-                    socket.to(game.id.toString()).emit('new round', game.map.round);                    
-                }
-
+                game.reset_clients_ready();
                 game.reset_players_ready();
+
+                var winner = game.map.winner();
+                if(winner){
+                    game.sockets.forEach(s => {
+                        if(s.player == winner){
+                            s.emit('You won.');
+                        }
+                    });
+                }
             }
-            
-            
-        }    
+        }
     });
     
     socket.on('disconnect', () => {

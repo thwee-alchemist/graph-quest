@@ -839,9 +839,14 @@ var FourD = function(){
     CONSTANTS.scene = scene;
     scene.add( camera );
     scene.add( light );
+    if(options.background){
+      scene.background = new THREE.TextureLoader().load(options.background);
+    }
     
     renderer = new THREE.WebGLRenderer();
-    renderer.setClearColor(0xefefef);
+    if(!options.background){
+      renderer.setClearColor(0xefefef);
+    }
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize( options.width, options.height );
     
