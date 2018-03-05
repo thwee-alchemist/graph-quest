@@ -687,11 +687,11 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var nocache = require('nocache');
+// var nocache = require('nocache');
 var path = require('path');
 
 app.use(express.static('public'));
-app.use(nocache());
+// app.use(nocache());
 
 app.get('/', function(req, res){
     res.sendFile('index.html', {root: path.join(__dirname, 'public')});
