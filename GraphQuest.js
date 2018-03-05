@@ -891,6 +891,7 @@ io.on('connection', function(socket){
             
             socket.game.map.remove_player(socket.player);
             socket.to(game.id).broadcast.emit('player left', socket.player.id);
+            socket.game.remove_player(socket.player);
             game.sockets.delete(socket);
         }
     });
