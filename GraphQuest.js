@@ -697,7 +697,7 @@ app.get('/', function(req, res){
     res.sendFile('index.html', {root: path.join(__dirname, 'public')});
 });
 
-http.listen(3000, function(){
+http.listen(80, function(){
     console.log('listening on *:3000');
 });
 
