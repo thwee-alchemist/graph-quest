@@ -697,8 +697,8 @@ app.get('/', function(req, res){
     res.sendFile('index.html', {root: path.join(__dirname, 'public')});
 });
 
-http.listen(process.env.PORT || 16000, function(){
-    console.log('listening on *:3000');
+http.listen(process.env.PORT || 3000, function(){
+    console.log('listening on *');
 });
 
 var setup_fleet_events = function(game, fleet, socket){
@@ -891,7 +891,6 @@ io.on('connection', function(socket){
             
             socket.game.map.remove_player(socket.player);
             socket.to(game.id).broadcast.emit('player left', socket.player.id);
-            socket.game.remove_player(socket.player);
             game.sockets.delete(socket);
         }
     });
