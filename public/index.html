@@ -33,6 +33,12 @@
                 color: gray;
                 background-color: gray;
             }
+
+            #privacy {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+            }
             
         </style>
 
@@ -77,6 +83,6 @@
         <script src="/fourd.js"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script src="/index.js"></script>
-        
+        <a id="privacy" href="javascript:alert(`Any data you enter here, including name, ready state, and moves are recorded and logged on the server.`)">Privacy Statement</a>
     </body>
 </html>
