@@ -91,6 +91,9 @@ socket.on('game map', map => {
             cube: {
                 size: CUBE_SIZE,
                 color: map.V[i].ruler.color
+            }, 
+            label: {
+                text: map.V[i].id.toString() + ' of ' + map.V[i].ruler._name
             }
         } : {
             cube: {

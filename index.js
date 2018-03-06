@@ -645,7 +645,6 @@ class Game{
     send_player_maps(){
         this.sockets.forEach(s => {
             var map = this.player_map(s.player);
-            console.log('player map', JSON.stringify(map));
             s.emit('game map', JSON.stringify(map));
         });
     }
