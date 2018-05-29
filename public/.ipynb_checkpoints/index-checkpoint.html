@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf8">
+        <meta author="thwee.abacadabra.alchemist@gmail.com">
+        <title>GraphQuest</title>
+        
+        <style>
+            html, body {
+                border: 0;
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+            
+            #stuff {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+            }
+
+            #game-ui {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 400px;
+            }
+            
+            #ships [disabled] {
+                color: gray;
+                background-color: gray;
+            }
+
+            #privacy {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+            }
+            
+        </style>
+
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({
+            google_ad_client: "ca-pub-3371766308403388",
+            enable_page_level_ads: true
+        });
+        </script>
+    </head>
+    <body>
+        <h1 class="header">Hello, Worlds!</h1>
+        
+        <ul id="games">
+            <li><a href="javascript:create_game()">Create game</a></li>
+        </ul>
+        
+        <div id="game-ui">
+            <label>Source Star:</label>
+            <span id="source-id"></span>
+            <br />
+            <label>Target Star:</label>
+            <span id="target-id"></span>
+            <br />
+            <input id="ships" type="number" min=1 max=0 />
+            <button id="submit-move">Order!</button>
+            <button id="cancel-moves">Cancel all moves.</button>
+            <br />
+            <button id="ready">Ready!</button>
+            <div id="notifications">
+            </div>
+        </div>
+        
+        <div id="stuff">
+        </div>
+
+        <script src="/jquery.js"></script>
+        <script src="/three.min.js"></script>
+        <script src="/OrbitControls.js"></script>
+        <script src="/THREEx.WindowResize.js"></script>
+        <script src="/fourd.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/index.js"></script>
+        <a id="privacy" href="javascript:alert(`Any data you enter here, including name, ready state, and moves are recorded and logged on the server.`)">Privacy Statement</a>
+    </body>
+</html>
