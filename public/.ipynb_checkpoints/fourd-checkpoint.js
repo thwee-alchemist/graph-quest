@@ -805,14 +805,16 @@ var FourD = function(){
     graph.layout();
     controls.update(clock.getDelta());
     
-    for(var i=0; i<that.render_loop.length; i++){
-      that.render_loop[i]();
-    }
-      
-    if(that.selected){
-      camera.lookAt(that.selected.position);
-    }
-    
+		for(var i=0; i<that.render_loop.length; i++){
+			if(typeof that.render_loop[i] == 'function'){
+				that.render_loop[i]();
+			}
+		}
+		
+		if(that.selected){
+			camera.lookAt(that.selected.position);
+		}
+		
     renderer.render(scene, camera);
   };
 
@@ -822,60 +824,36 @@ var FourD = function(){
   
   // api
   this.init = function(selector, options){
-    var settings = $.extend({
-      border: '1px solid black',
-      width: 500,
-      height: 250,
-      background: 0xffffff,
-    }, options);
-    
     scene = new THREE.Scene();
-    if(typeof selector === "string"){
-      element = document.querySelector(selector);
-    }else{
-      element = selector;
-    }
+    element = document.querySelector(selector);
     if(!element){
       throw "element " + selector + " wasn't found on the page.";
     }
-    
-    $(element).css({
-      border: 0,
-      margin: 0,
-      padding: 0
-    });
-    $(element).width(settings.width);
-    $(element).height(settings.height);
-    
     camera = new THREE.PerspectiveCamera(
       70,
-      settings.width / settings.height,
+      options.width / options.height,
       1,
       CONSTANTS.far
     );
-    light = new THREE.PointLight( 0xf0f0f0 ); // soft white light
+    light = new THREE.PointLight( 0xeeeeee ); // soft white light
     
     CONSTANTS.scene = scene;
     scene.add( camera );
     scene.add( light );
-
-    /*
     if(options.background){
       scene.background = new THREE.TextureLoader().load(options.background);
     }
-    */
     
     renderer = new THREE.WebGLRenderer();
-    renderer.setClearColor(settings.background);
+    if(!options.background){
+      renderer.setClearColor(0xefefef);
+    }
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize( settings.width, settings.height );
+    renderer.setSize( options.width, options.height );
     
-    $(element).append( renderer.domElement );
-    $(renderer.domElement).css({
-      margin: 0,
-      padding: 0,
-      border: settings.border
-    })
+    THREEx.WindowResize(renderer, camera);
+    
+    document.querySelector(selector).appendChild( renderer.domElement );
     
     graph = new Graph(scene);
     
@@ -883,7 +861,7 @@ var FourD = function(){
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
     clock = new THREE.Clock();
-    controls = new THREE.OrbitControls( camera, renderer.domElement );
+    controls = new THREE.OrbitControls( camera );
     controls.update(clock.getDelta()); 
     controls.movementSpeed = 250;
     controls.domElement = renderer.domElement;
@@ -893,23 +871,6 @@ var FourD = function(){
     
     that.intersect_callback = function(object){
       console.log(object.vertex);
-    };
-    
-    that.resolve_click = function(event){
-      if(event.target === renderer.domElement){
-        var raycaster = new THREE.Raycaster();
-        mouse = new THREE.Vector2();
-        mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
-        mouse.y = - ( event.clientY / renderer.domElement.height ) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        intersects = raycaster.intersectObjects(scene.children, true);
-
-        if(intersects.length > 0){
-          return intersects[0].object.vertex;
-        }else{
-          return null;
-        }
-      }
     };
     
     var onMouseDown = function(event){
@@ -928,17 +889,13 @@ var FourD = function(){
             that.on_mouse_down(null);
           }
         }
-        
-        if(intersects.length > 0){
-          that.selected = intersects[0].vertex;
-        }
-        
+                
         if(intersects.length > 0 && typeof that.intersect_callback == 'function'){
           that.intersect_callback(intersects[0].object, event);
         }
       }
     }
-    // $(element).on('mousedown', onMouseDown);
+    window.addEventListener('mousedown', onMouseDown, false);
     
     that._internals = {
       scene: scene,
@@ -950,12 +907,12 @@ var FourD = function(){
       controls: controls,
       clock: clock, 
       raycaster: raycaster,
-      mouse: mouse,
-
-      Vertex: Vertex,
-      Edge: Edge,
-      CameraVertex: CameraVertex,
-      BHN3: BHN3
+			mouse: mouse,
+			
+			Vertex: Vertex,
+			Edge: Edge,
+			CameraVertex: CameraVertex,
+			BHN3: BHN3
     };
 
     // api
