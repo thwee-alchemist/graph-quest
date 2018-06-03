@@ -544,7 +544,7 @@ class GameMap extends Graph {
         this.V.forEach(system => {
            has_one = has_one || (system.ruler == player);
         });
-
+  
         return !has_one;
     }
 };
@@ -696,8 +696,9 @@ app.get('/', function(req, res){
     res.sendFile('index.html', {root: path.join(__dirname, 'public')});
 });
 
-http.listen(process.env.PORT || 3000, function(){
-    console.log('listening on *');
+var port = process.env.PORT || 3000;
+http.listen(port, function(){
+    console.log(`listening on *:${port}`);
 });
 
 var setup_fleet_events = function(game, fleet, socket){

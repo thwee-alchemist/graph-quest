@@ -938,7 +938,7 @@ var FourD = function(){
         }
       }
     }
-    // $(element).on('mousedown', onMouseDown);
+    $(element).on('mousedown', onMouseDown);
     
     that._internals = {
       scene: scene,

@@ -13,18 +13,26 @@ var name = undefined;
 var moves = [];
 var CUBE_SIZE = 5;
 
+var fourd = new FourD();
+fourd.init('#stuff', {
+    width: window.innerWidth, 
+    height: window.innerHeight, 
+    //background: 'public/Su_Song_Star_Map_1.JPG'
+});
+fourd._internals.camera.position.z = -25;
+
 var socket = io();
 
 var choice = function(l){
     return l[Math.floor(Math.random() * l.length)];
 };
 
+
 socket.on('name?', function(){
     console.log('asked for name...');
-    name = prompt('What would you like to be called?');
-    $('.header').text(`hello, ${name}`);
+    name = prompt('What would you like to be called?') || "Stranger";
+    $('.header').text(`Hello, ${name}`);
     socket.emit('name:', name);
-    name = 'Joshua';
 });
 
 socket.emit('games?');
@@ -84,7 +92,7 @@ socket.on('game map', map => {
     console.log('game map', map);
     map = JSON.parse(map);
     
-    fourd.clear();
+      fourd.clear();
     
     for(var i=0; i<map.V.length; i++){
         var vertex_options = map.V[i].ruler ? {
@@ -149,14 +157,6 @@ socket.on('color', color => {
     $('.header').css({'color': '#' + parseInt(color).toString(16)});
 }); 
 
-fourd = new FourD();
-fourd.init('#stuff', {
-    width: window.innerWidth, 
-    height: window.innerHeight, 
-    //background: 'public/Su_Song_Star_Map_1.JPG'
-});
-fourd._internals.camera.position.z = -25;
-
 socket.on('game full', () => {
     alert('game full');
 });
@@ -184,6 +184,7 @@ $('#cancel-moves').prop('disabled', true);
 var source_id, target_id;
 var source, target;
 fourd.on_mouse_down = (vertex) => {
+    console.log('click');
     if(vertex){
         own = vertex.server_vertex.hasOwnProperty('ruler');
         if(source_id === undefined && own){
@@ -208,8 +209,8 @@ fourd.on_mouse_down = (vertex) => {
         target_id = undefined;
         source = undefined;
         target = undefined;
-        $('#source-id').text('');
-        $('#target-id').text('');
+        $('#source-id').text('Select a star system of your color...');
+        $('#target-id').text('Select an enemy star system...');
         $('#ships').prop('disabled', true);
         $('#submit-move').prop('disabled', true);
         return;
