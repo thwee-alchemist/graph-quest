@@ -544,6 +544,7 @@ var FourD = function(){
     var material = new THREE.LineBasicMaterial(options);
     
     var line = new THREE.Line( geometry, material );
+    line.frustumCulled = false;
       
     scene.add(line);
     return line;
