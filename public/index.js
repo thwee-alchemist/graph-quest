@@ -99,9 +99,6 @@ socket.on('game map', map => {
             cube: {
                 size: CUBE_SIZE,
                 color: map.V[i].ruler.color
-            }, 
-            label: {
-                text: map.V[i].id.toString() + ' of ' + map.V[i].ruler._name
             }
         } : {
             cube: {
@@ -252,42 +249,76 @@ $('#cancel-moves').click(function(){
 });
 
 function create_game(){
-    
-    var name = prompt("A name for this game: ");
-    if(!name){
-        return;
-    }
 
-    var players = parseInt(prompt("Number of players: "));
-    if(!players){
-        return;
+  var cancelButton = document.querySelector('#cancel');
+  var okButton = document.querySelector('#ok');
+  var dialog = document.querySelector('#dialog');
+  
+  if(dialog.showModal){
+    dialog.showModal();
+  }else{
+    dialog.setAttribute('open', '');
+  }
+  cancelButton.addEventListener('click', () => {
+    if(dialog.showModal){
+      dialog.close();
+    }else{
+      dialog.removeAttribute('open');
     }
+  });
+  
+  okButton.addEventListener('click', event => {
+    var game_options = {
+      name: document.querySelector('#game-name').value,
+      players: parseInt(document.querySelector('#num-players').value),
+      stars: parseInt(document.querySelector('#num-stars').value),
+      wormholes: parseInt(document.querySelector('#num-wormholes').value)
+    };
     
-    var stars = parseInt(prompt('Number of stars'));
-    if(!stars){
-        return;
+    socket.emit('new game', game_options);
+ 
+    if(dialog.showModal){
+      dialog.close();
+    }else{
+      dialog.removeAttribute('open');
     }
-    
-    var additional_wormholes = parseInt(prompt("Number of additional wormholes: "));
+  });
+  
+  /*
+  var name = prompt("A name for this game: ");
+  if(!name){
+      return;
+  }
 
-    console.log('new game', players, stars, additional_wormholes);
-    socket.emit('new game', {
-        name: name,
-        players: players,
-        stars: stars,
-        wormholes: additional_wormholes
-    });
-
-    console.log('new game');
-    
-    /*
-    socket.emit('new game', {
-        name: 'Battle Royale',
-        players: 2,
-        stars: 10,
-        wormholes: 20
-    });
-    */
+  var players = parseInt(prompt("Number of players: "));
+  if(!players){
+      return;
+  }
+  
+  var stars = parseInt(prompt('Number of stars'));
+  if(!stars){
+      return;
+  }
+  
+  var additional_wormholes = parseInt(prompt("Number of additional wormholes: "));
+  
+  console.log('new game', players, stars, additional_wormholes);
+  socket.emit('new game', {
+      name: name,
+      players: players,
+      stars: stars,
+      wormholes: additional_wormholes
+  });*/
+  console.log('new game');
+  
+  /*
+  socket.emit('new game', {
+    name: 'Battle Royale',
+    players: 2,
+    stars: 10,
+    wormholes: 20
+  });
+  */
 }
 
 $('#game-ui').hide();

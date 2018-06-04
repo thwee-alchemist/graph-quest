@@ -40,41 +40,64 @@
                 right: 0;
             }
             
+            dialog {
+              width: 400px;
+            }
+          
+            dialog>p>input {
+              position: absolute;
+              left: 250px;
+              width: 150px;
+            }
+            
         </style>
     </head>
     <body>
-        <h1 class="header">Hello, Worlds!</h1>
-        
-        <ul id="games">
-            <li><a href="javascript:create_game()">Create game</a></li>
-        </ul>
-        
-        <div id="game-ui">
-            <label>Source Star:</label>
-            <span id="source-id"></span>
-            <br />
-            <label>Target Star:</label>
-            <span id="target-id"></span>
-            <br />
-            <input id="ships" type="number" min=1 max=0 />
-            <button id="submit-move">Order!</button>
-            <button id="cancel-moves">Cancel all moves.</button>
-            <br />
-            <button id="ready">Ready!</button>
-            <div id="notifications">
-            </div>
-        </div>
-        
-        <div id="stuff">
-        </div>
+      <h1 class="header">Hello, Worlds!</h1>
 
-        <script src="/jquery.js"></script>
-        <script src="/three.min.js"></script>
-        <script src="/OrbitControls.js"></script>
-        <script src="/THREEx.WindowResize.js"></script>
-        <script src="/fourd.js"></script>
-        <script src="/socket.io/socket.io.js"></script>
-        <script src="/index.js"></script>
-        <a id="privacy" href="javascript:alert(`Any data you enter here, including name, ready state, and moves are recorded and logged on the server.`)">Privacy Statement</a>
-    </body>
+
+      <dialog id="dialog">
+        <h2>Game Options</h2>
+        <p><label for="game-name">Name of the game: </label><input id="game-name" placeholder="Enter a game to share ..."></input></p>
+        <p><label for="num-players">Number of players: </label><input id="num-players" type="number" value="1"></input></p>
+        <p><label for="num-stars">Number of stars: </label><input id="num-stars" type="number" value="10"></input></p>
+        <p><label for="num-wormholes">Number of additional wormholes: </label><input id="num-wormholes" type="number" value="10"></input></p>
+        <menu>
+          <button id="cancel">Cancel</button>
+          <button id="ok">OK</button>
+        </menu>
+    </dialog>
+          
+      <ul id="games">
+        <li><a href="javascript:create_game()">Create game</a></li>
+      </ul>
+    
+    <div id="game-ui">
+      <label>Source Star:</label>
+      <span id="source-id"></span>
+      <br />
+      <label>Target Star:</label>
+      <span id="target-id"></span>
+      <br />
+      <input id="ships" type="number" min=1 max=0 />
+      <button id="submit-move">Order!</button>
+      <button id="cancel-moves">Cancel all moves.</button>
+      <br />
+      <button id="ready">Ready!</button>
+      <div id="notifications">
+      </div>
+    </div>
+    
+    <div id="stuff">
+    </div>
+
+    <script src="/jquery.js"></script>
+    <script src="/three.min.js"></script>
+    <script src="/OrbitControls.js"></script>
+    <script src="/THREEx.WindowResize.js"></script>
+    <script src="/fourd.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/index.js"></script>
+    <a id="privacy" href="javascript:alert(`Any data you enter here, including name, ready state, and moves are recorded and logged on the server.`)">Privacy Statement</a>
+  </body>
 </html>
