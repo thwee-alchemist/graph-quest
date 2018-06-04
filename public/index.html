@@ -1,76 +1,103 @@
 <!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-        <meta author="thwee.abacadabra.alchemist@gmail.com">
-        <title>GraphQuest</title>
+  <html>
+  <head>
+    <meta charset="utf8">
+    <meta author="thwee.abacadabra.alchemist@gmail.com">
+    <title>GraphQuest</title>
+    
+    <style>
+      html, body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      
+      #stuff {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+
+      #game-ui {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 400px;
+      }
+      
+      #ships [disabled] {
+        color: gray;
+        background-color: gray;
+      }
+
+      #privacy {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+      }
+      
+      dialog {
+        width: 400px;
+      }
+    
+      dialog>p>input {
+        position: absolute;
+        left: 250px;
+        width: 150px;
+      }
+      
+      h1#question {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+      }
         
-        <style>
-            html, body {
-                border: 0;
-                padding: 0;
-                margin: 0;
-                overflow: hidden;
-            }
-            
-            #stuff {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -1;
-            }
+    </style>
+  </head>
+  <body>
+    <h1 class="header">Hello, Worlds!</h1>
 
-            #game-ui {
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 400px;
-            }
-            
-            #ships [disabled] {
-                color: gray;
-                background-color: gray;
-            }
-
-            #privacy {
-                position: absolute;
-                bottom: 0;
-                right: 0;
-            }
-            
-            dialog {
-              width: 400px;
-            }
-          
-            dialog>p>input {
-              position: absolute;
-              left: 250px;
-              width: 150px;
-            }
-            
-        </style>
-    </head>
-    <body>
-      <h1 class="header">Hello, Worlds!</h1>
-
-
-      <dialog id="dialog">
-        <h2>Game Options</h2>
-        <p><label for="game-name">Name of the game: </label><input id="game-name" placeholder="Enter a game to share ..."></input></p>
-        <p><label for="num-players">Number of players: </label><input id="num-players" type="number" value="1"></input></p>
-        <p><label for="num-stars">Number of stars: </label><input id="num-stars" type="number" value="10"></input></p>
-        <p><label for="num-wormholes">Number of additional wormholes: </label><input id="num-wormholes" type="number" value="10"></input></p>
-        <menu>
-          <button id="cancel">Cancel</button>
-          <button id="ok">OK</button>
-        </menu>
+    <dialog id="dialog">
+      <h2>Game Options</h2>
+      <p><label for="game-name">Name of the game: </label><input id="game-name" placeholder="Enter a game to share ..."></input></p>
+      <p><label for="num-players">Number of players: </label><input id="num-players" type="number" value="1"></input></p>
+      <p><label for="num-stars">Number of stars: </label><input id="num-stars" type="number" value="10"></input></p>
+      <p><label for="num-wormholes">Number of additional wormholes: </label><input id="num-wormholes" type="number" value="10"></input></p>
+      <menu>
+        <button id="cancel">Cancel</button>
+        <button id="ok">OK</button>
+      </menu>
     </dialog>
-          
-      <ul id="games">
-        <li><a href="javascript:create_game()">Create game</a></li>
-      </ul>
+    
+    <dialog id="rules">
+      <h2>Rules</h2>
+      <p>Welcome to Graph Quest. Every player starts with a home star producing 10 ships per round. 
+      A round ends when all players have clicked "ready". 
+      <br .<
+      To send ships from your star to another star, click on your star, then click on the enemy star. 
+      You'll see the star system's id in the top riight corner of the screen. 
+      Adjust the number of ships as needed.
+      Finally, click the order button. 
+      <br />
+      Repeat this process for each star you want to dispatch ships from. 
+      Finally, click ready, to let the server know you are done with your round.
+      
+      <h3>Privacy</h1>
+      Any data you enter here, including name, ready state, and moves are recorded and logged on the server.
+      That said, I don't really read that stuff unless there's a problem.
+
+      <menu>
+        <button id="close">Close</button>
+      </menu>
+    </dialog>
+        
+    <ul id="games">
+      <li><a href="javascript:create_game()">Create game</a></li>
+    </ul>
     
     <div id="game-ui">
       <label>Source Star:</label>
@@ -90,6 +117,8 @@
     
     <div id="stuff">
     </div>
+    
+    <h1 id="question">?</h1>
 
     <script src="/jquery.js"></script>
     <script src="/three.min.js"></script>
@@ -98,6 +127,5 @@
     <script src="/fourd.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/index.js"></script>
-    <a id="privacy" href="javascript:alert(`Any data you enter here, including name, ready state, and moves are recorded and logged on the server.`)">Privacy Statement</a>
   </body>
 </html>

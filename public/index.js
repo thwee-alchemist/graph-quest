@@ -323,8 +323,27 @@ function create_game(){
 
 $('#game-ui').hide();
 function join_game(id){
-    console.log('joining game', id);
-    socket.emit('join game:', id);
-    $('#games').hide();
-    $('#game-ui').show();
+  console.log('joining game', id);
+  socket.emit('join game:', id);
+  $('#games').hide();
+  $('#game-ui').show();
 }
+
+$(question).click(() => {
+  var dialog = document.querySelector('#rules');
+  var closeButton = document.querySelector('#close');
+  
+  if(dialog.showModal){
+    dialog.showModal();
+  }else{
+    dialog.setAttribute('open', '');
+  }
+  
+  $(closeButton).click(() => {
+    if(dialog.showModal){
+      dialog.close();
+    }else{
+      dialog.removeAttribute('open');
+    }
+  });
+});

@@ -875,7 +875,9 @@ var FourD = function(){
       margin: 0,
       padding: 0,
       border: settings.border
-    })
+    });
+    
+    THREEx.WindowResize(renderer, camera);
     
     graph = new Graph(scene);
     
